@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: ''
+
+Resources:
+  BronzeLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub 'antartica-data-${AWS::Region}-${AWS::AccountId}'
+        S3Key: "lambda_code/lambda.zip"
+      Role: !GetAtt LambdaIAMRole.Arn
+      Runtime: python3.9
+      Handler: lambda.lambda_handler
+      Timeout: 60
+      Environment:
+        Variables:
+          DESTINATION_BUCKET: !Sub 'antartica-data-${AWS::Region}-${AWS::AccountId}'
+  LambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaIAMRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service:
+              - lambda.amazonaws.com
+          Action:
+            - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3FullAccess # todo add other policies when eventbus is implemented
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  # todo - add eventbus + rules
+  # todo - add cloudwatch logging config etc. to avoid log retention
